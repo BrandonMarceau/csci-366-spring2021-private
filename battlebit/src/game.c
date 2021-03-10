@@ -4,7 +4,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 #include "game.h"
+#include "char_buff.h"
 
 // STEP 9 - Synchronization: the GAME structure will be accessed by both players interacting
 // asynchronously with the server.  Therefore the data must be protected to avoid race conditions.
@@ -39,6 +42,7 @@ int game_fire(game *game, int player, int x, int y) {
     //
     //  If the opponents ships value is 0, they have no remaining ships, and you should set the game state to
     //  PLAYER_1_WINS or PLAYER_2_WINS depending on who won.
+
 }
 
 unsigned long long int xy_to_bitval(int x, int y) {
@@ -53,7 +57,15 @@ unsigned long long int xy_to_bitval(int x, int y) {
     //
     // you will need to use bitwise operators and some math to produce the right
     // value.
-    return 1ull;
+    if (y < 0 || y > 7) {
+        return 0;
+    }
+    if (x < 0 || x > 7) {
+        return 0;
+    }
+    else {
+        return 1ull << (x + (8 * y));
+    }
 }
 
 struct game * game_get_current() {
@@ -72,16 +84,124 @@ int game_load_board(struct game *game, int player, char * spec) {
     // slot and return 1
     //
     // if it is invalid, you should return -1
-}
 
-int add_ship_horizontal(player_info *player, int x, int y, int length) {
-    // implement this as part of Step 2
-    // returns 1 if the ship can be added, -1 if not
-    // hint: this can be defined recursively
-}
 
-int add_ship_vertical(player_info *player, int x, int y, int length) {
-    // implement this as part of Step 2
-    // returns 1 if the ship can be added, -1 if not
-    // hint: this can be defined recursively
+    // Check to make sure string of ships is not empty and is appropriate size to include all ships
+
+    player_info *current_player = &GAME->players[player];
+
+    if (spec == NULL) {
+        return -1;
+    }
+    if (strlen(spec) != 15) {
+        return -1;
+    }
+
+    bool carrier = false;
+    bool battleship = false;
+    bool destroyer = false;
+    bool submarine = false;
+    bool patrol = false;
+    for (int i = 0; i < 15; i += 3) {
+        if (spec[i] == 67 || spec[i] == 99) { carrier = true; }
+        if (spec[i] == 66 || spec[i] == 98) { battleship = true; }
+        if (spec[i] == 68 || spec[i] == 100) { destroyer = true; }
+        if (spec[i] == 83 || spec[i] == 115) { submarine = true; }
+        if (spec[i] == 80 || spec[i] == 112) { patrol = true; }
+    }
+    if (carrier == false || battleship == false || destroyer == false || submarine == false || patrol == false) {
+        return -1;
+    }
+
+    for (int i = 0; i < 15; i += 3) {
+        if (spec[i] > 64 && spec[i] < 91) {
+            if (add_ship_horizontal(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i])) == -1) {
+                return -1;
+            }
+            else {
+                add_ship_horizontal(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i]));
+            }
+        }
+        if (spec[i] > 96 && spec[i] < 123) {
+            if (add_ship_vertical(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i])) == -1) {
+                return -1;
+                }
+            else {
+                add_ship_vertical(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i]));
+                }
+            }
+        }
+
+
+        if (!game->players[player].ships || !game->players[(player + 1) % 2].ships) {
+            game->status = CREATED;
+        } else if (player == 0) {
+            game->status = PLAYER_1_TURN;
+        } else {
+            game->status = PLAYER_0_TURN;
+        }
+        return 1;
+    }
+
+
+
+
+
+    int add_ship_horizontal(player_info *player, int x, int y, int length) {
+        // implement this as part of Step 2
+        // returns 1 if the ship can be added, -1 if not
+        // hint: this can be defined recursively
+        if (length == 0) {
+            return 1;
+        }
+        if (x < 0 || x > 7 || y < 0 || y > 7) {
+            return -1;
+        }
+        else {
+            unsigned long long mask = xy_to_bitval(x, y);
+            if (player->ships & mask) {
+                return -1;
+            }
+            player->ships = mask | player->ships;
+            return add_ship_horizontal(player, ++x, y, --length);
+        }
+    }
+
+        int add_ship_vertical(player_info *player, int x, int y, int length) {
+            // implement this as part of Step 2
+            // returns 1 if the ship can be added, -1 if not
+            // hint: this can be defined recursively
+            if (length == 0) {
+                return 1;
+            }
+            if (x < 0 || x > 7 || y < 0 || y > 7) {
+                return -1;
+            }
+            else {
+                unsigned long long mask = xy_to_bitval(x, y);
+                if (player->ships & mask) {
+                        return -1;
+                    }
+                player->ships = mask | player->ships;
+                return add_ship_vertical(player, x, ++y, --length);
+                }
+            }
+
+            int get_ship_length(type) {
+                switch (type) {
+                    case 'C':
+                    case 'c':
+                        return 5;
+                    case 'B':
+                    case 'b':
+                        return 4;
+                    case 'D':
+                    case 'd':
+                    case 'S':
+                    case 's':
+                        return 3;
+                    case 'P':
+                    case 'p':
+                        return 2;
+                }
 }

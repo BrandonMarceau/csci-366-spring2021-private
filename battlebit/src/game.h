@@ -39,4 +39,6 @@ int add_ship_vertical(player_info *player, int x, int y, int length);
 
 unsigned long long int xy_to_bitval(int x, int y);
 
+int get_ship_length(int type);
+
 #endif //BATTLESHIP_GAME_H
