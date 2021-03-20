@@ -1,2 +1,15 @@
 ;; TODO - implement counting up from 1 to 10
 ;; in MIPS assembly, code only
+
+main:
+
+	li, $t0, 1
+	loop:
+		li, $v0, 1
+		move $a0, $t0
+		syscall
+		addi $t0, $t0, 1
+		ble  $t0, 10, loop
+
+		li $v0, 10
+		syscall
