@@ -105,6 +105,25 @@ void repl_print_ships(player_info *player_info, char_buff *buffer) {
     //  for the console.  You will need to use bit masking for each position
     //  to determine if a ship is at the position or not.  If it is present
     //  you need to print an X.  If not, you need to print a space character ' '
+
+    cb_append(buffer, "  0 1 2 3 4 5 6 7 \n");
+    for (int y = 0; y < 8; ++y) {
+        cb_append_int(buffer, y);
+        for (int x = 0; x < 8; ++x) {
+            unsigned long long int mask = xy_to_bitval(x, y);
+            // Append a * character on the buffer if the spot the mask is checking has a player ship (player ships and mask = 1)
+            if (player_info->ships & mask) {
+                cb_append(buffer, " *");
+            }
+            // Append a space on the buffer if the spot the mask is checking has no ship there (player ships = 0)
+            else {
+                cb_append(buffer, "  ");
+            }
+        }
+        cb_append(buffer, " \n");
+    }
+
+
 }
 
 void repl_print_hits(struct player_info *player_info, struct char_buff *buffer) {
@@ -114,4 +133,25 @@ void repl_print_hits(struct player_info *player_info, struct char_buff *buffer) 
     // hits and shots values in the players game struct.  If a shot was fired at
     // a given spot and it was a hit, print 'H', if it was a miss, print 'M'.  If
     // no shot was taken at a position, print a space character ' '
+
+    cb_append(buffer, "  0 1 2 3 4 5 6 7 \n");
+    for (int y = 0; y < 8; ++y) {
+        cb_append_int(buffer, y);
+        for (int x = 0; x < 8; ++x) {
+            unsigned long long int mask = xy_to_bitval(x, y);
+            // Append an H onto buffer if the player has taken a shot at a space and hit a ship
+            if (player_info->hits & mask) {
+                cb_append(buffer, " H");
+            }
+            // Append an M onto the buffer if the player has taken a shot at that space and NOT hit a ship
+            else if (player_info->shots & mask) {
+                cb_append(buffer, " M");
+            }
+            // Blank space if the player has not taken a shot at that space
+            else {
+                cb_append(buffer, "  ");
+            }
+        }
+        cb_append(buffer, " \n");
+    }
 }
