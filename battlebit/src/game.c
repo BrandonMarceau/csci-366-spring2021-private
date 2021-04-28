@@ -49,7 +49,7 @@ int game_fire(game *game, int player, int x, int y) {
     player_info *opponent = &game->players[otherPlayer];
 
     unsigned long long mask = xy_to_bitval(x, y);
-    currentPlayer->shots = mask;
+    currentPlayer->shots |= mask;
 
     // If current players shot is where an opponents ship is, sets that coordinate to a hit for the current player
     if (opponent->ships & mask) {
@@ -65,7 +65,7 @@ int game_fire(game *game, int player, int x, int y) {
                 game->status = PLAYER_1_WINS;
             }
         }
-        // If opponent still has ships left after the shot, switches whose turn it is.
+            // If opponent still has ships left after the shot, switches whose turn it is.
         else if (player == 0) {
             game->status = PLAYER_1_TURN;
         }
@@ -123,10 +123,22 @@ int game_load_board(struct game *game, int player, char * spec) {
 
     player_info *current_player = &GAME->players[player];
 
-    // Check to make sure ship string is not null and is a full 15 char string (3 char for each ship)
+
+
+
+    // Check to make sure ship string is not null
     if (spec == NULL) {
         return -1;
     }
+
+    // Shortcut takes player 1s ships to only one ship spot at 0, 0
+    if (spec[0] == 'Z') {
+        game->players[1].ships = 0;
+        game->players[1].ships |= xy_to_bitval(0, 0);
+        return 1;
+    }
+
+    //Check that spec is full 15 char string (3 char for each ship)
     if (strlen(spec) != 15) {
         return -1;
     }
@@ -159,7 +171,7 @@ int game_load_board(struct game *game, int player, char * spec) {
             if (add_ship_horizontal(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i])) == -1) {
                 return -1;
             }
-            // Add the ship horizontally through the function
+                // Add the ship horizontally through the function
             else {
                 add_ship_horizontal(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i]));
             }
@@ -170,98 +182,98 @@ int game_load_board(struct game *game, int player, char * spec) {
             if (add_ship_vertical(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i])) == -1) {
                 return -1;
             }
-            // Add the ship vertically through the function
+                // Add the ship vertically through the function
             else {
                 add_ship_vertical(current_player, spec[i + 1] - '0', spec[i + 2] - '0', get_ship_length(spec[i]));
             }
         }
     }
-        // Set the games statuses after ships have been put on board
-        if (!game->players[player].ships || !game->players[(player + 1) % 2].ships) {
-            game->status = CREATED;
-        } else if (player == 0) {
-            game->status = PLAYER_1_TURN;
-        } else {
-            game->status = PLAYER_0_TURN;
-        }
+    // Set the games statuses after ships have been put on board
+    if (!game->players[player].ships || !game->players[(player + 1) % 2].ships) {
+        game->status = CREATED;
+    } else if (player == 0) {
+        game->status = PLAYER_1_TURN;
+    } else {
+        game->status = PLAYER_0_TURN;
+    }
+    return 1;
+}
+
+
+
+
+
+int add_ship_horizontal(player_info *player, int x, int y, int length) {
+    // implement this as part of Step 2
+    // returns 1 if the ship can be added, -1 if not
+    // hint: this can be defined recursively
+
+    // Base case that indicates the ship has been placed properly
+    if (length == 0) {
         return 1;
     }
 
-
-
-
-
-    int add_ship_horizontal(player_info *player, int x, int y, int length) {
-        // implement this as part of Step 2
-        // returns 1 if the ship can be added, -1 if not
-        // hint: this can be defined recursively
-
-        // Base case that indicates the ship has been placed properly
-        if (length == 0) {
-            return 1;
-        }
-
-        // Return error if ship coordinates run off the board
-        if (x < 0 || x > 7 || y < 0 || y > 7) {
-            return -1;
-        }
-
-        else {
-            unsigned long long mask = xy_to_bitval(x, y);
-            // Return error if the ship is going to overlap another ship
-            if (player->ships & mask) {
-                return -1;
-            }
-            // Change the 0 to a 1 at the mask value, adding a ship location there in player->ship
-            player->ships = mask | player->ships;
-            // Recursively call add_ship_horizontal until the ship is fully placed
-            return add_ship_horizontal(player, ++x, y, --length);
-        }
+    // Return error if ship coordinates run off the board
+    if (x < 0 || x > 7 || y < 0 || y > 7) {
+        return -1;
     }
 
-        int add_ship_vertical(player_info *player, int x, int y, int length) {
-            // implement this as part of Step 2
-            // returns 1 if the ship can be added, -1 if not
-            // hint: this can be defined recursively
+    else {
+        unsigned long long mask = xy_to_bitval(x, y);
+        // Return error if the ship is going to overlap another ship
+        if (player->ships & mask) {
+            return -1;
+        }
+        // Change the 0 to a 1 at the mask value, adding a ship location there in player->ship
+        player->ships = mask | player->ships;
+        // Recursively call add_ship_horizontal until the ship is fully placed
+        return add_ship_horizontal(player, ++x, y, --length);
+    }
+}
 
-            // Base case that indicates the ship has been placed properly
-            if (length == 0) {
-                return 1;
-            }
+int add_ship_vertical(player_info *player, int x, int y, int length) {
+    // implement this as part of Step 2
+    // returns 1 if the ship can be added, -1 if not
+    // hint: this can be defined recursively
 
-            // Return error if ship coordinates run off the board
-            if (x < 0 || x > 7 || y < 0 || y > 7) {
-                return -1;
-            }
-            else {
-                unsigned long long mask = xy_to_bitval(x, y);
-                // Return error if the ship is going to overlap another ship
-                if (player->ships & mask) {
-                        return -1;
-                    }
-                // Change the 0 to a 1 at the mask value, adding a ship location there in player->ships
-                player->ships = mask | player->ships;
-                // Recursively call add_ship_horizontal until the ship is fully placed
-                return add_ship_vertical(player, x, ++y, --length);
-                }
-            }
+    // Base case that indicates the ship has been placed properly
+    if (length == 0) {
+        return 1;
+    }
 
-            // Function to get the length of each ship type
-            int get_ship_length(type) {
-                switch (type) {
-                    case 'C':
-                    case 'c':
-                        return 5;
-                    case 'B':
-                    case 'b':
-                        return 4;
-                    case 'D':
-                    case 'd':
-                    case 'S':
-                    case 's':
-                        return 3;
-                    case 'P':
-                    case 'p':
-                        return 2;
-                }
+    // Return error if ship coordinates run off the board
+    if (x < 0 || x > 7 || y < 0 || y > 7) {
+        return -1;
+    }
+    else {
+        unsigned long long mask = xy_to_bitval(x, y);
+        // Return error if the ship is going to overlap another ship
+        if (player->ships & mask) {
+            return -1;
+        }
+        // Change the 0 to a 1 at the mask value, adding a ship location there in player->ships
+        player->ships = mask | player->ships;
+        // Recursively call add_ship_horizontal until the ship is fully placed
+        return add_ship_vertical(player, x, ++y, --length);
+    }
+}
+
+// Function to get the length of each ship type
+int get_ship_length(type) {
+    switch (type) {
+        case 'C':
+        case 'c':
+            return 5;
+        case 'B':
+        case 'b':
+            return 4;
+        case 'D':
+        case 'd':
+        case 'S':
+        case 's':
+            return 3;
+        case 'P':
+        case 'p':
+            return 2;
+    }
 }

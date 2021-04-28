@@ -38,7 +38,7 @@ void cb_print(struct char_buff * buffer) {
     printf("string: %s\n", buffer->buffer);
 }
 
-char * cb_tokenize(struct char_buff * buffer, const char * split_on){
+char * cb_tokenize(struct char_buff * buffer, const char * split_on) {
     buffer->tokienzed_on = split_on;
     return strtok_r(buffer->buffer, split_on, &buffer->tokenization_save_pointer);
 }
